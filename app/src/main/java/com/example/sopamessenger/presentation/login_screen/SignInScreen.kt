@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -36,11 +37,29 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.credentials.CredentialManager
+import androidx.credentials.CredentialOption
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.exceptions.GetCredentialException
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.example.sopamessenger.R
+import com.example.sopamessenger.data.Constant.ServerClient
+import com.example.sopamessenger.data.Constant.WebServerClient
 import com.example.sopamessenger.navigation.ScreenRoutes
+import com.example.sopamessenger.presentation.GoogleSignInButton
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.launch
+import timber.log.Timber
+import java.security.MessageDigest
+import java.util.Timer
+import java.util.UUID
 
 @Composable
 fun SignInScreen(
@@ -54,6 +73,7 @@ fun SignInScreen(
     val context = LocalContext.current
     val state = viewModel.signInState.collectAsState(initial = null)
 
+    val googleSignInState = viewModel.googleState.value
 
     Column(
         modifier = Modifier
@@ -139,7 +159,7 @@ fun SignInScreen(
         }
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
             if (state.value?.isLoading == true) {
-                //CircularProgressIndicator()
+                CircularProgressIndicator()
             }
         }
         Text(
@@ -164,13 +184,7 @@ fun SignInScreen(
                 .fillMaxWidth()
                 .padding(top = 10.dp), horizontalArrangement = Arrangement.Center
         ) {
-            IconButton(onClick = { /*TODO*/ }) {
-                Icon(
-                    modifier = Modifier.size(50.dp),
-                    painter = painterResource(id = R.drawable.ic_google),
-                    contentDescription = "Google Icon", tint = Color.Unspecified
-                )
-            }
+            GoogleSignInButton()
             Spacer(modifier = Modifier.width(20.dp))
             IconButton(onClick = {
 
@@ -198,6 +212,13 @@ fun SignInScreen(
             if (state.value?.isError?.isNotBlank() == true) {
                 val error = state.value?.isError
                 Toast.makeText(context, "$error", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+    LaunchedEffect(key1 = googleSignInState.success) {
+        scope.launch {
+            if (googleSignInState.success != null) {
+                Toast.makeText(context, "Sign In with Google success", Toast.LENGTH_LONG).show()
             }
         }
     }
