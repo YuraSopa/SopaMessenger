@@ -41,6 +41,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.example.sopamessenger.R
 import com.example.sopamessenger.navigation.ScreenRoutes
+import com.example.sopamessenger.presentation.GoogleSignInButton
 import kotlinx.coroutines.launch
 
 @Composable
@@ -140,7 +141,7 @@ fun SignUpScreen(
         }
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
             if (state.value?.isLoading == true) {
-//                CircularProgressIndicator()
+                CircularProgressIndicator()
             }
         }
         Text(
@@ -165,13 +166,7 @@ fun SignUpScreen(
                 .fillMaxWidth()
                 .padding(top = 10.dp), horizontalArrangement = Arrangement.Center
         ) {
-            IconButton(onClick = { /*TODO*/ }) {
-                Icon(
-                    modifier = Modifier.size(50.dp),
-                    painter = painterResource(id = R.drawable.ic_google),
-                    contentDescription = "Google Icon", tint = Color.Unspecified
-                )
-            }
+            GoogleSignInButton()
             Spacer(modifier = Modifier.width(20.dp))
             IconButton(onClick = {
 
