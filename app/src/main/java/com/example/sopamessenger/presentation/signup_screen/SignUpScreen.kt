@@ -56,6 +56,7 @@ fun SignUpScreen(
     val context = LocalContext.current
     val state = viewModel.signUpState.collectAsState(initial = null)
 
+    val googleSignInState = viewModel.googleState.value
 
     Column(
         modifier = Modifier
@@ -139,9 +140,12 @@ fun SignUpScreen(
                     .padding(7.dp)
             )
         }
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-            if (state.value?.isLoading == true) {
-                CircularProgressIndicator()
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            if (state.value?.isLoading == true || googleSignInState.loading) {
+                CircularProgressIndicator(modifier = Modifier.padding(top = 20.dp))
             }
         }
         Text(
@@ -166,7 +170,13 @@ fun SignUpScreen(
                 .fillMaxWidth()
                 .padding(top = 10.dp), horizontalArrangement = Arrangement.Center
         ) {
-            GoogleSignInButton()
+            GoogleSignInButton(
+                onClick = {
+                    scope.launch {
+                        viewModel.googleSignIn(context)
+                    }
+                }
+            )
             Spacer(modifier = Modifier.width(20.dp))
             IconButton(onClick = {
 
@@ -194,6 +204,21 @@ fun SignUpScreen(
             if (state.value?.isError?.isNotBlank() == true) {
                 val error = state.value?.isError
                 Toast.makeText(context, "$error", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    LaunchedEffect(key1 = googleSignInState.success) {
+        scope.launch {
+            if (googleSignInState.success != null) {
+                Toast.makeText(context, "Sign In with Google success", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+    LaunchedEffect(key1 = googleSignInState.error) {
+        scope.launch {
+            if (googleSignInState.error.isNotBlank()) {
+                Toast.makeText(context, googleSignInState.error, Toast.LENGTH_LONG).show()
             }
         }
     }

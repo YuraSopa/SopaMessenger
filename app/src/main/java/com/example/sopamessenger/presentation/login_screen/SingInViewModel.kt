@@ -1,13 +1,13 @@
 package com.example.sopamessenger.presentation.login_screen
 
+import android.content.Context
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.sopamessenger.data.AuthRepositoryImpl
+import com.example.sopamessenger.presentation.GoogleSignInState
 import com.example.sopamessenger.util.Resource
-import com.google.firebase.auth.AuthCredential
-import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -25,15 +25,14 @@ class SingInViewModel @Inject constructor(
     private val _googleState = mutableStateOf(GoogleSignInState())
     val googleState: State<GoogleSignInState> = _googleState
 
-    private val auth: FirebaseAuth = FirebaseAuth.getInstance()
 
-    fun googleSignIn(credential: AuthCredential) = viewModelScope.launch {
-        repository.googleSignIn(credential).collect { result ->
+    fun googleSignIn(context: Context) = viewModelScope.launch {
+
+        repository.googleSignIn(context).collect { result ->
             when (result) {
                 is Resource.Success -> {
                     _googleState.value = GoogleSignInState(success = result.data)
                 }
-
                 is Resource.Loading -> {
                     _googleState.value = GoogleSignInState(loading = true)
                 }
@@ -43,6 +42,7 @@ class SingInViewModel @Inject constructor(
             }
         }
     }
+
 
     fun loginUser(email: String, password: String) = viewModelScope.launch {
         repository.loginUser(email, password).collect { result ->

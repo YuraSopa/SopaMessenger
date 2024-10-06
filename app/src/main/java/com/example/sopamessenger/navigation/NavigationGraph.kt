@@ -5,6 +5,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.sopamessenger.presentation.MainScreen
 import com.example.sopamessenger.presentation.login_screen.SignInScreen
 import com.example.sopamessenger.presentation.signup_screen.SignUpScreen
 
@@ -22,6 +23,8 @@ fun NavigationGraph(
         composable(route = ScreenRoutes.SignUpScreen.route) {
             SignUpScreen(navController)
         }
-
+        composable(route = ScreenRoutes.MainScreen.route) {
+            MainScreen(navController)
+        }
     }
 }
