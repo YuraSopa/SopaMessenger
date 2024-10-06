@@ -37,29 +37,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.credentials.CredentialManager
-import androidx.credentials.CredentialOption
-import androidx.credentials.GetCredentialRequest
-import androidx.credentials.exceptions.GetCredentialException
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.example.sopamessenger.R
-import com.example.sopamessenger.data.Constant.ServerClient
-import com.example.sopamessenger.data.Constant.WebServerClient
 import com.example.sopamessenger.navigation.ScreenRoutes
 import com.example.sopamessenger.presentation.GoogleSignInButton
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.common.api.ApiException
-import com.google.android.libraries.identity.googleid.GetGoogleIdOption
-import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
-import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.launch
-import timber.log.Timber
-import java.security.MessageDigest
-import java.util.Timer
-import java.util.UUID
 
 @Composable
 fun SignInScreen(
@@ -157,9 +140,12 @@ fun SignInScreen(
                     .padding(7.dp)
             )
         }
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-            if (state.value?.isLoading == true) {
-                CircularProgressIndicator()
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            if (state.value?.isLoading == true || googleSignInState.loading) {
+                CircularProgressIndicator(modifier = Modifier.padding(top = 20.dp))
             }
         }
         Text(
@@ -184,7 +170,13 @@ fun SignInScreen(
                 .fillMaxWidth()
                 .padding(top = 10.dp), horizontalArrangement = Arrangement.Center
         ) {
-            GoogleSignInButton()
+            GoogleSignInButton(
+                onClick = {
+                    scope.launch {
+                        viewModel.googleSignIn(context)
+                    }
+                }
+            )
             Spacer(modifier = Modifier.width(20.dp))
             IconButton(onClick = {
 
@@ -215,10 +207,18 @@ fun SignInScreen(
             }
         }
     }
+
     LaunchedEffect(key1 = googleSignInState.success) {
         scope.launch {
             if (googleSignInState.success != null) {
                 Toast.makeText(context, "Sign In with Google success", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+    LaunchedEffect(key1 = googleSignInState.error) {
+        scope.launch {
+            if (googleSignInState.error.isNotBlank()) {
+                Toast.makeText(context, googleSignInState.error, Toast.LENGTH_LONG).show()
             }
         }
     }
