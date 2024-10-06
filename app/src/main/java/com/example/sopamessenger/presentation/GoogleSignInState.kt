@@ -1,4 +1,4 @@
-package com.example.sopamessenger.presentation.login_screen
+package com.example.sopamessenger.presentation
 
 import com.google.firebase.auth.AuthResult
 
