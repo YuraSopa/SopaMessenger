@@ -5,7 +5,6 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.DrawerValue
@@ -23,8 +22,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.example.sopamessenger.presentation.DrawerHeader
+import com.example.sopamessenger.presentation.chat_screen.ChatScreen
 import com.example.sopamessenger.presentation.itemsDrawerMenu
 import com.example.sopamessenger.ui.theme.SopaMessengerTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -32,7 +31,6 @@ import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class ChatActivity : ComponentActivity() {
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,8 +45,7 @@ class ChatActivity : ComponentActivity() {
                     drawerState = drawerState,
                     drawerContent = {
                         ModalDrawerSheet {
-                        DrawerHeader()
-                            Spacer(modifier = Modifier.padding(12.dp))
+                            DrawerHeader()
                             itemsDrawerMenu.forEach { item ->
                                 NavigationDrawerItem(
                                     icon = {
@@ -62,7 +59,11 @@ class ChatActivity : ComponentActivity() {
                                     onClick = {
                                         scope.launch { drawerState.close() }
                                         selectedItem.value = item
-                                        Toast.makeText(this@ChatActivity, item.title, Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(
+                                            this@ChatActivity,
+                                            item.title,
+                                            Toast.LENGTH_SHORT
+                                        ).show()
                                     },
                                     modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                                 )
@@ -82,10 +83,7 @@ class ChatActivity : ComponentActivity() {
                                 )
                             }
                         ) { innerPadding ->
-                            Greeting(
-                                name = "Android",
-                                modifier = Modifier.padding(innerPadding)
-                            )
+                            ChatScreen(modifier = Modifier.padding(innerPadding))
                         }
 
                     }
