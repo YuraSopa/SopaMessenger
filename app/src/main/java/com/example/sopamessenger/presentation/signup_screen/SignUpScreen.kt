@@ -1,5 +1,6 @@
 package com.example.sopamessenger.presentation.signup_screen
 
+import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -39,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.example.sopamessenger.ChatActivity
 import com.example.sopamessenger.R
 import com.example.sopamessenger.navigation.ScreenRoutes
 import com.example.sopamessenger.presentation.GoogleSignInButton
@@ -184,7 +186,7 @@ fun SignUpScreen(
                 Icon(
                     modifier = Modifier.size(52.dp),
                     painter = painterResource(id = R.drawable.ic_facebook),
-                    contentDescription = "Google Icon", tint = Color.Unspecified
+                    contentDescription = "FB Icon", tint = Color.Unspecified
                 )
             }
 
@@ -196,6 +198,8 @@ fun SignUpScreen(
             if (state.value?.isSuccess?.isNotEmpty() == true) {
                 val success = state.value?.isSuccess
                 Toast.makeText(context, "$success", Toast.LENGTH_LONG).show()
+                val intent = Intent(context, ChatActivity::class.java)
+                context.startActivity(intent)
             }
         }
     }
@@ -212,6 +216,8 @@ fun SignUpScreen(
         scope.launch {
             if (googleSignInState.success != null) {
                 Toast.makeText(context, "Sign In with Google success", Toast.LENGTH_LONG).show()
+                val intent = Intent(context, ChatActivity::class.java)
+                context.startActivity(intent)
             }
         }
     }
