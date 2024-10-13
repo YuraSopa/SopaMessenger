@@ -1,8 +1,11 @@
 package com.example.sopamessenger.data
 
 data class Message(
-    val text: String,
-    val userName: String,
-    val timestamp: Long,
-    val id: String
+    val id: String = "",
+    val senderId: String = "",
+    val message: String = "",
+    val timestamp: Long = System.currentTimeMillis(),
+    val senderName: String = "",
+    val senderImage: String? = null,
+    val imageUrl: String? = null
 )
