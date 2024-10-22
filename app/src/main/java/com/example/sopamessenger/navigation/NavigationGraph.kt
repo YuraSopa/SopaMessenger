@@ -8,7 +8,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.sopamessenger.presentation.chat_screen.ChatScreen
-import com.example.sopamessenger.presentation.chat_screen.HomeScreen
+import com.example.sopamessenger.presentation.home_screen.HomeScreen
 import com.example.sopamessenger.presentation.login_screen.SignInScreen
 import com.example.sopamessenger.presentation.signup_screen.SignUpScreen
 
@@ -30,13 +30,17 @@ fun NavigationGraph(
             HomeScreen(navController)
         }
         
-        composable(route = "chat/{channelId}", arguments = listOf(
+        composable(route = "chat/{channelId}&{channelName}", arguments = listOf(
             navArgument("channelId") {
+                type = NavType.StringType
+            },
+            navArgument("channelName") {
                 type = NavType.StringType
             }
         )) {
             val channelId = it.arguments?.getString("channelId") ?: ""
-            ChatScreen(navController, channelId)
+            val channelName = it.arguments?.getString("channelName") ?: ""
+            ChatScreen(navController, channelId, channelName)
         }
     }
 }

@@ -1,4 +1,4 @@
-package com.example.sopamessenger.presentation.chat_screen
+package com.example.sopamessenger.presentation.home_screen
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
