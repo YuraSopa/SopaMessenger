@@ -2,6 +2,7 @@ package com.example.sopamessenger
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -15,7 +16,8 @@ import androidx.compose.ui.res.stringResource
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppBar(
-    onNavigationIconClick: () -> Unit
+    onNavigationIconClick: () -> Unit,
+    onSearchIconClick: () -> Unit
 ) {
     TopAppBar(
         title = {
@@ -30,6 +32,11 @@ fun AppBar(
         navigationIcon = {
             IconButton(onClick = { onNavigationIconClick() }) {
                 Icon(imageVector = Icons.Default.Menu, contentDescription = "Toggle drawer")
+            }
+        },
+        actions = {
+            IconButton(onClick = { onSearchIconClick() }) {
+                Icon(imageVector = Icons.Default.Search, contentDescription = "Search")
             }
         }
     )
