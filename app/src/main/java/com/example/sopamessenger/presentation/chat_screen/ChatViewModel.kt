@@ -1,5 +1,11 @@
 package com.example.sopamessenger.presentation.chat_screen
 
+import android.content.Context
+import android.net.Uri
+import android.os.Environment.DIRECTORY_PICTURES
+import androidx.compose.runtime.MutableState
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModel
 import com.example.sopamessenger.data.Message
 import com.google.firebase.Firebase
@@ -8,9 +14,14 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.database
+import com.google.firebase.storage.storage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import java.util.UUID
 import javax.inject.Inject
 
@@ -23,14 +34,17 @@ class ChatViewModel @Inject constructor() : ViewModel(
     val messages = _messages.asStateFlow()
     private val db = Firebase.database
 
-    fun sendMessage(channelId: String, messageText: String) {
+    fun sendMessage(channelId: String, messageText: String?, image: String? = null) {
         val message = Message(
-            id = db.reference.push().key ?: UUID.randomUUID().toString(),
-            senderId = Firebase.auth.currentUser?.uid ?: "",
-            message = messageText,
-            senderName = Firebase.auth.currentUser?.displayName ?: "",
+            db.reference.push().key ?: UUID.randomUUID().toString(),
+            Firebase.auth.currentUser?.uid ?: "",
+            messageText,
+            System.currentTimeMillis(),
+            Firebase.auth.currentUser?.displayName ?: "",
+            null,
+            image
         )
-        db.getReference("messages").child(channelId).push().setValue(message)
+        db.reference.child("messages").child(channelId).push().setValue(message)
     }
 
     fun listenForMessages(channelId: String) {
@@ -50,5 +64,40 @@ class ChatViewModel @Inject constructor() : ViewModel(
                 }
 
             })
+    }
+
+    fun createImageUri(context: Context, cameraImageUri: MutableState<Uri?>): Uri {
+        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val storageDir =
+            ContextCompat.getExternalFilesDirs(context, DIRECTORY_PICTURES)
+                .first()
+
+        return FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.provider",
+            File.createTempFile("IMAGE_$timeStamp", ".jpg", storageDir).apply {
+                cameraImageUri.value = Uri.fromFile(this)
+            }
+        )
+    }
+
+    fun sendImageMessage(uri: Uri, channelId: String) {
+        val imageRef = Firebase.storage.reference.child("images/${UUID.randomUUID()}")
+        imageRef.putFile(uri)
+            .continueWithTask { task ->
+                if (!task.isSuccessful) {
+                    task.exception?.let {
+                        throw it
+                    }
+                }
+                imageRef.downloadUrl
+            }.addOnCompleteListener { task ->
+                val currentUser = Firebase.auth.currentUser
+                if (task.isSuccessful) {
+                    val downloadUri = task.result
+                    sendMessage(channelId, null, downloadUri.toString())
+                }
+
+            }
     }
 }
