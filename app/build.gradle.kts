@@ -1,9 +1,17 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("com.google.gms.google-services")
     id("kotlin-kapt")
     id("dagger.hilt.android.plugin")
+}
+
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(localPropertiesFile.inputStream())
 }
 
 android {
@@ -21,6 +29,10 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        val webServerClient: String = localProperties.getProperty("webServerClient") as? String ?: "NO_CLIENT_ID"
+        println("webServerClient from local.properties: $webServerClient")
+        buildConfigField("String", "WEB_SERVER_CLIENT_ID", "\"$webServerClient\"")
     }
 
     buildTypes {
@@ -41,6 +53,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"

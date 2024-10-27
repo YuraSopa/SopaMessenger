@@ -5,6 +5,7 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.sopamessenger.BuildConfig
 import com.example.sopamessenger.data.AuthRepositoryImpl
 import com.example.sopamessenger.presentation.GoogleSignInState
 import com.example.sopamessenger.util.Resource
@@ -12,6 +13,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
@@ -38,6 +40,7 @@ class SingUpViewModel @Inject constructor(
                 }
                 is Resource.Error -> {
                     _googleState.value = GoogleSignInState(error = result.message!!)
+                    Timber.d(BuildConfig.WEB_SERVER_CLIENT_ID)
                 }
             }
         }

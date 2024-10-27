@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialException
-import com.example.sopamessenger.data.Constant.WebServerClient
+import com.example.sopamessenger.BuildConfig
 import com.example.sopamessenger.util.Resource
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
@@ -55,7 +55,7 @@ class AuthRepositoryImpl @Inject constructor(
 
         val googleIdOption = GetGoogleIdOption.Builder()
             .setFilterByAuthorizedAccounts(false)
-            .setServerClientId(WebServerClient)
+            .setServerClientId(BuildConfig.WEB_SERVER_CLIENT_ID)
             .setNonce(hashedNonce)
             .build()
 
