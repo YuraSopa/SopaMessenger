@@ -1,11 +1,11 @@
-package com.example.sopamessenger.presentation.chat_screen
+package com.example.sopamessenger.presentation.home_screen
 
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -26,8 +27,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
-import androidx.compose.material3.NavigationDrawerItem
-import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -42,13 +41,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.sopamessenger.AppBar
 import com.example.sopamessenger.presentation.DrawerHeader
+import com.example.sopamessenger.presentation.DrawerItem
 import com.example.sopamessenger.presentation.itemsDrawerMenu
+import com.example.sopamessenger.util.getContrastingColor
+import com.example.sopamessenger.util.getRandomColor
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
@@ -73,25 +76,12 @@ fun HomeScreen(
             ModalDrawerSheet {
                 DrawerHeader()
                 itemsDrawerMenu.forEach { item ->
-                    NavigationDrawerItem(
-                        icon = {
-                            Icon(
-                                imageVector = item.icon,
-                                contentDescription = item.contentDescription
-                            )
-                        },
-                        label = { Text(text = item.title) },
-                        selected = item == selectedItem.value,
-                        onClick = {
-                            scope.launch { drawerState.close() }
-                            selectedItem.value = item
-                            Toast.makeText(
-                                navController.context,
-                                item.title,
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        },
-                        modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                    DrawerItem(
+                        item = item,
+                        selectedItem = selectedItem,
+                        scope = scope,
+                        drawerState = drawerState,
+                        context = navController.context
                     )
                 }
             }
@@ -108,6 +98,9 @@ fun HomeScreen(
                             scope.launch {
                                 drawerState.open()
                             }
+                        },
+                        onSearchIconClick = {
+
                         }
                     )
                 }
@@ -127,21 +120,9 @@ fun HomeScreen(
                         LazyColumn {
                             items(channels.value) { channel ->
                                 Column {
-                                    Text(
-                                        text = channel.name,
-                                        fontWeight = FontWeight.Bold,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .height(80.dp)
-                                            .background(MaterialTheme.colorScheme.onPrimary)
-                                            .clickable {
-                                                navController.navigate("chat/${channel.id}")
-                                            }
-                                    )
-                                    HorizontalDivider(
-                                        thickness = 1.dp,
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
+                                    ChannelItem(channelName = channel.name) {
+                                        navController.navigate("chat/${channel.id}&${channel.name}")
+                                    }
                                 }
                             }
                         }
@@ -190,6 +171,47 @@ fun AddChannelFab(
             tint = Color.White
         )
     }
+}
+
+
+@Composable
+fun ChannelItem(channelName: String, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(80.dp)
+            .background(MaterialTheme.colorScheme.onPrimary)
+            .clickable {
+                onClick()
+            },
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+
+        val bgColor = remember {
+            getRandomColor()
+        }
+        Box(
+            modifier = Modifier
+                .padding(8.dp)
+                .size(60.dp)
+                .clip(CircleShape)
+                .background(bgColor),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = channelName[0].toString().uppercase(),
+                modifier = Modifier.align(Alignment.Center),
+                style = TextStyle(fontSize = 30.sp),
+                color = getContrastingColor(bgColor)
+            )
+        }
+        Text(text = channelName)
+    }
+    HorizontalDivider(
+        thickness = 1.dp,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.fillMaxWidth()
+    )
 }
 
 

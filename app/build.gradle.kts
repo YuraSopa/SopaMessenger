@@ -1,9 +1,17 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("com.google.gms.google-services")
     id("kotlin-kapt")
     id("dagger.hilt.android.plugin")
+}
+
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(localPropertiesFile.inputStream())
 }
 
 android {
@@ -21,6 +29,10 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        val webServerClient: String = localProperties.getProperty("webServerClient") as? String ?: "NO_CLIENT_ID"
+        println("webServerClient from local.properties: $webServerClient")
+        buildConfigField("String", "WEB_SERVER_CLIENT_ID", "\"$webServerClient\"")
     }
 
     buildTypes {
@@ -41,6 +53,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"
@@ -80,10 +93,13 @@ dependencies {
 
     //Dagger
     implementation("com.google.dagger:hilt-android:2.48")
-    implementation ("androidx.hilt:hilt-navigation-compose:1.2.0")
+    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
     kapt("com.google.dagger:hilt-android-compiler:2.48")
 
-    implementation ("androidx.credentials:credentials:1.2.2")
-    implementation ("com.google.android.libraries.identity.googleid:googleid:1.1.1")
-    implementation ("com.google.android.gms:play-services-auth:21.2.0")
+    implementation("androidx.credentials:credentials:1.2.2")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
+    implementation("com.google.android.gms:play-services-auth:21.2.0")
+
+    implementation("com.google.firebase:firebase-storage-ktx:21.0.1")
+    implementation ("io.coil-kt:coil-compose:2.5.0")
 }
