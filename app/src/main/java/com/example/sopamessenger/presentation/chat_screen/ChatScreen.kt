@@ -6,11 +6,13 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -31,17 +33,22 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
@@ -228,7 +235,7 @@ fun ChatMessage(message: Message) {
     }
 
     val alignment = if (isCurrentUser) Alignment.CenterEnd else Alignment.CenterStart
-
+    var showImageDialog by remember { mutableStateOf(false) }
 
 
     Box(
@@ -237,17 +244,7 @@ fun ChatMessage(message: Message) {
             .padding(vertical = 4.dp, horizontal = 4.dp)
     ) {
 
-        val paddingCustom = if (isCurrentUser) {
-            Modifier
-                .align(alignment)
-                .background(color = messageColor, shape = RoundedCornerShape(8.dp))
-                .padding(start = 80.dp)
-        } else {
-            Modifier
-                .align(alignment)
-                .background(color = messageColor, shape = RoundedCornerShape(8.dp))
-                .padding(end = 80.dp)
-        }
+
         Row(
             modifier = Modifier
                 .align(alignment)
@@ -280,8 +277,37 @@ fun ChatMessage(message: Message) {
                 if (message.imageUrl != null) {
                     AsyncImage(
                         model = message.imageUrl,
-                        contentDescription = null
+                        contentDescription = null,
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier
+                            .height(250.dp)
+                            .clickable {
+                            showImageDialog = true
+                        }
                     )
+
+                    if (showImageDialog) {
+                        Dialog(onDismissRequest = { showImageDialog = false },
+                            properties = DialogProperties(usePlatformDefaultWidth = false)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(Color.Black.copy(alpha = 0.8f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                AsyncImage(
+                                    model = message.imageUrl,
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Fit,
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clickable { showImageDialog = false }
+                                )
+                            }
+                        }
+                    }
+
                 } else {
                     Text(
                         text = message.message ?: "",
