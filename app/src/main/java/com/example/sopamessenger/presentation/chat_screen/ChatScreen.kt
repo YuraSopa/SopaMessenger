@@ -1,6 +1,7 @@
 package com.example.sopamessenger.presentation.chat_screen
 
 import android.Manifest
+import android.content.Context
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -23,6 +24,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -32,6 +35,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,6 +46,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
@@ -113,6 +118,7 @@ fun ChatScreen(
             }
             val messages = viewModel.messages.collectAsState()
             ChatMessages(
+                channelId = channelId,
                 messages = messages.value,
                 onSendMessage = { message ->
                     viewModel.sendMessage(channelId, message)
@@ -150,6 +156,7 @@ fun ChatScreen(
 
 @Composable
 fun ChatMessages(
+    channelId: String,
     messages: List<Message>,
     onSendMessage: (String) -> Unit,
     onImageClicked: () -> Unit
@@ -169,7 +176,7 @@ fun ChatMessages(
     ) {
         LazyColumn(modifier = Modifier.weight(1f), state = listState) {
             items(messages) { message ->
-                ChatMessage(message)
+                ChatMessage(channelId, message)
             }
         }
         Row(
@@ -226,24 +233,19 @@ fun ChatMessages(
 }
 
 @Composable
-fun ChatMessage(message: Message) {
+fun ChatMessage(channelId: String, message: Message) {
     val isCurrentUser = message.senderId == Firebase.auth.currentUser?.uid
-    val messageColor = if (isCurrentUser) {
-        Color.Green
-    } else {
-        Color.White
-    }
 
     val alignment = if (isCurrentUser) Alignment.CenterEnd else Alignment.CenterStart
     var showImageDialog by remember { mutableStateOf(false) }
-
+    var showImageMenuState = remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp, horizontal = 4.dp)
     ) {
-
 
         Row(
             modifier = Modifier
@@ -267,13 +269,23 @@ fun ChatMessage(message: Message) {
                 }
             }
 
-
-            Box(
-                modifier = Modifier
-                    .background(color = messageColor, shape = RoundedCornerShape(8.dp))
+            val messageMod = if (!isCurrentUser) {
+                Modifier
+                    .padding(end = 40.dp)
+                    .background(color = Color.White, shape = RoundedCornerShape(8.dp))
                     .padding(8.dp)
                     .align(Alignment.CenterVertically)
-            ) {
+            } else {
+                Modifier
+                    .padding(start = 40.dp)
+                    .background(color = Color.Green, shape = RoundedCornerShape(8.dp))
+                    .padding(8.dp)
+                    .align(Alignment.CenterVertically)
+            }
+
+            Box(modifier = messageMod.clickable {
+                showImageMenuState.value = true
+            }) {
                 if (message.imageUrl != null) {
                     AsyncImage(
                         model = message.imageUrl,
@@ -282,30 +294,16 @@ fun ChatMessage(message: Message) {
                         modifier = Modifier
                             .height(250.dp)
                             .clickable {
-                            showImageDialog = true
-                        }
+                                showImageDialog = true
+                            }
                     )
 
                     if (showImageDialog) {
-                        Dialog(onDismissRequest = { showImageDialog = false },
-                            properties = DialogProperties(usePlatformDefaultWidth = false)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .background(Color.Black.copy(alpha = 0.8f)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                AsyncImage(
-                                    model = message.imageUrl,
-                                    contentDescription = null,
-                                    contentScale = ContentScale.Fit,
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .clickable { showImageDialog = false }
-                                )
-                            }
-                        }
+                        ImageDialogFullscreen(
+                            onDismissRequest = { showImageDialog = false },
+                            onImageClicked = { showImageDialog = true },
+                            message = message
+                        )
                     }
 
                 } else {
@@ -317,6 +315,12 @@ fun ChatMessage(message: Message) {
                     )
                 }
 
+                MessageDropdownMenu(
+                    showImageMenu = showImageMenuState,
+                    context = context,
+                    channelId = channelId,
+                    message = message
+                )
             }
         }
     }
@@ -341,4 +345,61 @@ fun ContentSelectionDialog(
         },
         title = { Text(text = "Select your choice") },
         text = { Text(text = "Would you like to pick an image from the gallery or use the camera") })
+}
+
+@Composable
+fun ImageDialogFullscreen(
+    onDismissRequest: () -> Unit,
+    onImageClicked: () -> Unit,
+    message: Message
+) {
+    Dialog(
+        onDismissRequest = { onDismissRequest() },
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.8f)),
+            contentAlignment = Alignment.Center
+        ) {
+            AsyncImage(
+                model = message.imageUrl,
+                contentDescription = null,
+                contentScale = ContentScale.Fit,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clickable { onImageClicked() }
+            )
+        }
+    }
+}
+
+@Composable
+fun MessageDropdownMenu(
+    showImageMenu: MutableState<Boolean>,
+    context: Context,
+    channelId: String,
+    message: Message,
+    viewModel: ChatViewModel = hiltViewModel()
+) {
+    DropdownMenu(
+        expanded = showImageMenu.value,
+        onDismissRequest = { showImageMenu.value = false }) {
+        DropdownMenuItem(
+            text = { Text(text = "Copy") },
+            onClick = {
+                viewModel.copyToClipboard(
+                    context,
+                    message.message ?: ""
+                )
+                showImageMenu.value = false
+            })
+        DropdownMenuItem(
+            text = { Text(text = "Delete") },
+            onClick = {
+                viewModel.deleteMessage(channelId, message.id)
+                showImageMenu.value = false
+            })
+    }
 }

@@ -1,5 +1,7 @@
 package com.example.sopamessenger.presentation.chat_screen
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.net.Uri
 import android.os.Environment.DIRECTORY_PICTURES
@@ -18,6 +20,7 @@ import com.google.firebase.storage.storage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import timber.log.Timber
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -35,8 +38,10 @@ class ChatViewModel @Inject constructor() : ViewModel(
     private val db = Firebase.database
 
     fun sendMessage(channelId: String, messageText: String?, image: String? = null) {
+        val messageId =
+            db.reference.child("messages").child(channelId).push().key ?: UUID.randomUUID().toString()
         val message = Message(
-            db.reference.push().key ?: UUID.randomUUID().toString(),
+            messageId,
             Firebase.auth.currentUser?.uid ?: "",
             messageText,
             System.currentTimeMillis(),
@@ -44,8 +49,9 @@ class ChatViewModel @Inject constructor() : ViewModel(
             null,
             image
         )
-        db.reference.child("messages").child(channelId).push().setValue(message)
+        db.reference.child("messages").child(channelId).child(messageId).setValue(message)
     }
+
 
     fun listenForMessages(channelId: String) {
         db.getReference("messages").child(channelId).orderByChild("timestamp")
@@ -99,5 +105,22 @@ class ChatViewModel @Inject constructor() : ViewModel(
                 }
 
             }
+    }
+
+    fun deleteMessage(channelId: String, messageId: String) {
+        Timber.d("Deleting message with ID: $messageId in channel: $channelId")
+        db.reference.child("messages").child(channelId).child(messageId).removeValue()
+            .addOnSuccessListener {
+                Timber.d("Message deleted successfully")
+            }
+            .addOnFailureListener { exception ->
+                Timber.e("Error deleting message: $exception")
+            }
+    }
+
+    fun copyToClipboard(context: Context, text: String) {
+        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clip = ClipData.newPlainText("Copied Message", text)
+        clipboard.setPrimaryClip(clip)
     }
 }
